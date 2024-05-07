@@ -10714,7 +10714,7 @@ name values to the [=/browsing context=]'s [=autofill store for testing=].
 
 <div algorithm="remote end steps for autofill.save">
 
-The [=remote end steps=] with <var ignore="">session</var> and 
+The [=remote end steps=] with <var ignore="">session</var> and
 |command parameters| are:
 
 1. Let |context id| be the value of the <code>context</code> field of
@@ -10798,7 +10798,7 @@ The [=remote end steps=] with |session| and |command parameters| are:
 
 1. If |element| is not a [=form-associated element=] or |element|'s [=form owner=] is
    null, return an [=error=] with [=error code=] [=invalid element state=].
-                                                     
+
 1. The [=user agent=] should [=autofill=] |element| and |element|'s [=form
    owner=], while taking into account the contents of |store|.
 
