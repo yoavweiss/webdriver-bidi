@@ -495,6 +495,7 @@ Event = {
 
 EventData = (
   BrowsingContextEvent //
+  InputEvent //
   LogEvent //
   NetworkEvent //
   ScriptEvent
@@ -11440,6 +11441,13 @@ InputCommand = (
 
 [=local end definition=]
 
+<pre class="cddl local-cddl">
+
+InputEvent = (
+  input.FileDialogOpened
+)
+</pre>
+
 ### Types ### {#module-input-types}
 
 #### input.ElementOrigin #### {#type-input-origin}
@@ -11917,6 +11925,100 @@ The [=remote end steps=] with |session| and |command parameters| are:
 
 The <code>autofill.FieldName</code> is a token. Valid token values are defined in
 [=autofill detail tokens=].
+
+# Patches to Other Specifications # {#patches}
+
+This specification requires some changes to external specifications to provide the necessary
+integration points. It is assumed that these patches will be committed to the other specifications
+as part of the standards process.
+
+## HTML ##  {#patches-html}
+
+The [=a browsing context is discarded=] algorithm is modified to read as follows:
+### Events ### {#module-input-events}
+
+#### The input.fileDialogOpened Event #### {#event-input-fileDialogOpened}
+
+<dl>
+   <dt>Event Type</dt>
+   <dd>
+      <pre class="cddl local-cddl remote-cddl">
+         input.FileDialogOpened = (
+            method: "input.fileDialogOpened",
+            params: input.FileDialogInfo
+         )
+
+         input.FileDialogInfo = {
+            context: browsingContext.BrowsingContext,
+            ? element: script.SharedReference,
+            multiple: bool,
+         }
+      </pre>
+   </dd>
+</dl>
+
+<div algorithm>
+The [=remote end event trigger=] is the
+<dfn export>WebDriver BiDi file dialog opened</dfn> steps, given |element| and optionally
+|file picker options| (default: null):
+
+1. Let |navigable| be the |element|'s [=node document=]'s [=/navigable=].
+
+1. Let |navigable id| be |navigable|'s [=navigable id=].
+
+1. Let |multiple| be <code>false</code>.
+
+1. If |element| is not null and |element|'s <{input/multiple}> attribute is set,
+    set |multiple| to <code>true</code>.
+
+1. If |file picker options| is not null:
+
+   1. If |file picker options|["<code>multiple</code>"] is true, set |multiple| to
+      <code>true</code>.
+
+1. Let |related navigables| be a [=/set=] containing |navigable|.
+
+1. For each |session| in the [=set of sessions for which an event is enabled=] given
+   "<code>input.fileDialogOpened</code>" and |related navigables|:
+
+  1. Let |params| be a [=/map=] matching the <code>input.FileDialogInfo</code>
+     production with the <code>context</code> field set to |navigable id| and
+     <code>multiple</code> field set to |multiple|.
+
+  1. If |element| is not null:
+
+    1. Let |shared id| be [=get shared id for a node=] with |element| and |session|.
+
+    1. Set |params|["<code>element</code>"] to |shared id|.
+
+  1. Let |body| be a [=/map=] matching the <code>input.fileDialogOpened</code>
+     production, with the <code>params</code> field set to |params|.
+
+  1. [=Emit an event=] with |session| and |body|.
+
+1. Let |dismissed| be false.
+
+1. For each |session| in [=active BiDi sessions=]:
+
+  1. Let |user prompt handler| be |session|'s [=user prompt handler=].
+
+  1. If |user prompt handler| is not null:
+
+   1. Assert |user prompt handler| is a [=/map=].
+
+   1. If |user prompt handler| [=map/contains=] "<code>file</code>":
+
+      1. If |user prompt handler|["<code>file</code>"] is not equal to
+         "<code>ignore</code>", set |dismissed| to true.
+
+   1. Otherwise if |user prompt handler| [=map/contains=] "<code>default</code>" and
+      |user prompt handler|["<code>default</code>"] is not equal to
+      "<code>ignore</code>", set |dismissed| to true.
+
+1. Return |dismissed|.
+
+</div>
+
 
 ## The webExtension Module ## {#module-webExtension}
 
